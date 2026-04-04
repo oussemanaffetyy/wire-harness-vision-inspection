@@ -7,16 +7,6 @@
     "info": "Dashboard FlowFuse minimal en francais pour le prototype d inspection du faisceau."
   },
   {
-    "id": "whi_ff_comment",
-    "type": "comment",
-    "z": "whi_ff_tab",
-    "name": "Import Notes",
-    "info": "Requires @flowfuse/node-red-dashboard. Open the page at /inspection/ after deployment.",
-    "x": 180,
-    "y": 60,
-    "wires": []
-  },
-  {
     "id": "whi_ff_broker",
     "type": "mqtt-broker",
     "name": "Local MQTT",
