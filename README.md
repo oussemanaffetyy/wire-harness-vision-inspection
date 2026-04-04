@@ -32,7 +32,7 @@ github_ready/
 ## Windows - demarrage rapide
 
 Prerequis :
-- Python 3.11
+- Python 3.11 64-bit
 - VS Code
 - Optionnel : Node-RED pour le dashboard
 
@@ -43,6 +43,8 @@ Dans le dossier du projet, lancer :
 ```bat
 scripts\01_install_windows.bat
 ```
+
+Ce script exige Python 3.11 et recree `.venv` si un ancien environnement utilise une autre version.
 
 ### 2. Ouvrir l'application
 
