@@ -1,0 +1,52 @@
+app:
+  name: wire-harness-vision-inspection
+  version: 0.1.0
+
+runtime:
+  show_window: true
+  loop_video: true
+  save_nok_snapshots: true
+  snapshot_dir: data/snapshots
+  snapshot_cooldown_frames: 20
+  window_name: Wire Harness Inspection
+
+source:
+  default_offline_video: data/videos/demo_wire_harness.mp4
+  default_camera_index: 0
+  default_stream_url: ""
+  frame_rotation: 0
+  camera_width: 1280
+  camera_height: 720
+
+detector:
+  mode: yolo
+  yolo_model_path: data/models/best.pt
+  anomaly_mode: false
+  yolo:
+    confidence_threshold: 0.35
+    image_size: 640
+    device: cpu
+  anomaly:
+    threshold: 0.55
+    blur_threshold: 60.0
+    darkness_threshold: 55.0
+    min_foreground_ratio: 0.010
+
+validation:
+  anomaly_threshold: 0.55
+
+visualization:
+  draw_zones: true
+  draw_boxes: true
+  show_labels: true
+  person_mask:
+    enabled: false
+    model_path: yolov8s.pt
+    confidence_threshold: 0.25
+    image_size: 640
+    device: cpu
+    every_n_frames: 1
+    overlay_alpha: 0.55
+    overlay_color_bgr: [70, 190, 90]
+    blur_kernel: 31
+    min_area_ratio: 0.01

@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "broker": {
+    "host": "127.0.0.1",
+    "port": 1883,
+    "keepalive": 60,
+    "client_id": "wire-harness-inspector"
+  },
+  "publisher": {
+    "qos": 0,
+    "retain_status": true,
+    "retain_metrics": true
+  },
+  "topics": {
+    "status": "factory/inspection/status",
+    "metrics": "factory/inspection/metrics",
+    "events": "factory/inspection/events",
+    "snapshot": "factory/inspection/snapshot"
+  }
+}

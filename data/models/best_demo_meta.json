@@ -1,0 +1,12 @@
+{
+  "source_weights": "yolov8n.pt",
+  "deployed_model": "/Users/bigsur/Documents/wire-harness-vision-inspection/data/models/best.pt",
+  "training_run": "/Users/bigsur/Documents/wire-harness-vision-inspection/data/training/wire_harness_demo_yolo",
+  "dataset_yaml": "/Users/bigsur/Documents/wire-harness-vision-inspection/data/datasets/wire_harness_demo/wire_harness_demo.yaml",
+  "classes": [
+    "cable",
+    "clip",
+    "connector"
+  ],
+  "notes": "Synthetic demo model trained for the built-in wire-harness sample scene."
+}

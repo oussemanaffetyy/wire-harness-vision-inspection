@@ -1,0 +1,260 @@
+[
+  {
+    "id": "whi_ff_tab",
+    "type": "tab",
+    "label": "Dashboard Faisceau",
+    "disabled": false,
+    "info": "Dashboard FlowFuse minimal en francais pour le prototype d inspection du faisceau."
+  },
+  {
+    "id": "whi_ff_comment",
+    "type": "comment",
+    "z": "whi_ff_tab",
+    "name": "Import Notes",
+    "info": "Requires @flowfuse/node-red-dashboard. Open the page at /inspection/ after deployment.",
+    "x": 180,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "whi_ff_broker",
+    "type": "mqtt-broker",
+    "name": "Local MQTT",
+    "broker": "127.0.0.1",
+    "port": "1883",
+    "clientid": "nodered-wire-harness-flowfuse",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthRetain": "false",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closeRetain": "false",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willRetain": "false",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  },
+  {
+    "id": "whi_ff_ui",
+    "type": "ui-base",
+    "name": "Inspection Faisceau",
+    "path": "/inspection",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "none",
+    "navigationStyle": "none",
+    "titleBarStyle": "hidden",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 3,
+    "showDisconnectNotification": true,
+    "allowInstall": false
+  },
+  {
+    "id": "whi_ff_theme",
+    "type": "ui-theme",
+    "name": "Industriel Clair",
+    "colors": {
+      "surface": "#F6F7F5",
+      "primary": "#214E6A",
+      "bgPage": "#ECEFED",
+      "groupBg": "#FFFFFF",
+      "groupOutline": "#D6DDD8"
+    }
+  },
+  {
+    "id": "whi_ff_page",
+    "type": "ui-page",
+    "name": "Surveillance",
+    "ui": "whi_ff_ui",
+    "path": "/",
+    "icon": "",
+    "layout": "grid",
+    "theme": "whi_ff_theme",
+    "order": 1,
+    "className": "whi-page"
+  },
+  {
+    "id": "whi_ff_group_main",
+    "type": "ui-group",
+    "name": "Ecran Principal",
+    "page": "whi_ff_page",
+    "width": "12",
+    "height": "1",
+    "order": 1,
+    "showTitle": false,
+    "className": "whi-group whi-group-main"
+  },
+  {
+    "id": "whi_ff_style",
+    "type": "ui-template",
+    "z": "whi_ff_tab",
+    "ui": "whi_ff_ui",
+    "name": "Dashboard Style",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "head": "",
+    "format": ":root {\n  --whi-bg: #ecefed;\n  --whi-panel: rgba(255,255,255,0.97);\n  --whi-line: #d6ddd8;\n  --whi-text: #22384b;\n  --whi-muted: #728191;\n  --whi-ok: #178a43;\n  --whi-ok-dark: #116833;\n  --whi-nok: #d62e2e;\n  --whi-idle: #9aa7b5;\n  --whi-shadow: 0 22px 45px rgba(24, 38, 52, 0.08);\n}\nhtml, body {\n  overflow: hidden !important;\n}\n.nrdb-app {\n  --nrdb-font-family: 'Avenir Next', 'Trebuchet MS', sans-serif;\n}\nbody {\n  background: linear-gradient(180deg, #f8faf8 0%, var(--whi-bg) 100%);\n}\n.v-app-bar.v-toolbar {\n  display: none !important;\n}\n.nrdb-ui-page main {\n  width: 100%;\n  min-height: 100vh;\n  padding: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: stretch;\n  overflow: hidden;\n  box-sizing: border-box;\n}\n.whi-group > .v-card {\n  width: 100%;\n  background: transparent;\n  border: 0;\n  box-shadow: none;\n}\n.whi-shell {\n  width: 100%;\n  max-width: none;\n}\n.whi-panel {\n  width: 100%;\n  background: var(--whi-panel);\n  border: 1px solid var(--whi-line);\n  border-radius: 28px;\n  box-shadow: var(--whi-shadow);\n  padding: 30px;\n  box-sizing: border-box;\n}\n.whi-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 30px;\n  flex-wrap: wrap;\n}\n.whi-kicker {\n  font-size: 11px;\n  letter-spacing: 0.16em;\n  font-weight: 700;\n  text-transform: uppercase;\n  color: var(--whi-muted);\n}\n.whi-title {\n  margin-top: 6px;\n  font-size: 24px;\n  font-weight: 800;\n  color: var(--whi-text);\n}\n.whi-time {\n  color: var(--whi-muted);\n  background: #edf2f5;\n  border: 1px solid var(--whi-line);\n  padding: 10px 14px;\n  border-radius: 999px;\n  font-size: 13px;\n  white-space: nowrap;\n}\n.whi-status-box {\n  width: min(100%, 440px);\n  margin: 0 auto;\n  border-radius: 24px;\n  padding: 26px 20px;\n  text-align: center;\n  color: #fff;\n  font-size: 64px;\n  font-weight: 900;\n  letter-spacing: 0.05em;\n  background: linear-gradient(135deg, #9aa7b5 0%, #738090 100%);\n}\n.whi-status-box.is-ok {\n  background: linear-gradient(135deg, #1aa14f 0%, #116833 100%);\n}\n.whi-status-box.is-nok {\n  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);\n}\n.whi-note {\n  margin-top: 18px;\n  text-align: center;\n  font-size: 19px;\n  font-weight: 700;\n  color: var(--whi-text);\n}\n.whi-history {\n  margin-top: 32px;\n}\n.whi-history-head {\n  font-size: 16px;\n  font-weight: 800;\n  color: var(--whi-text);\n  margin-bottom: 12px;\n}\n.whi-history-list {\n  display: grid;\n  gap: 10px;\n}\n.whi-history-item {\n  display: grid;\n  grid-template-columns: 92px 1fr auto;\n  gap: 14px;\n  align-items: center;\n  background: #fbfcfb;\n  border: 1px solid var(--whi-line);\n  border-radius: 16px;\n  padding: 14px 16px;\n}\n.whi-history-badge {\n  text-align: center;\n  border-radius: 12px;\n  padding: 10px 8px;\n  color: #fff;\n  font-size: 18px;\n  font-weight: 900;\n  letter-spacing: 0.04em;\n  background: linear-gradient(135deg, #9aa7b5 0%, #738090 100%);\n}\n.whi-history-badge.is-ok {\n  background: linear-gradient(135deg, #1aa14f 0%, #116833 100%);\n}\n.whi-history-badge.is-nok {\n  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);\n}\n.whi-history-text {\n  font-size: 15px;\n  font-weight: 700;\n  color: var(--whi-text);\n}\n.whi-history-time {\n  font-size: 13px;\n  color: var(--whi-muted);\n  white-space: nowrap;\n}\n.whi-empty {\n  background: #fbfcfb;\n  border: 1px dashed var(--whi-line);\n  border-radius: 16px;\n  padding: 16px;\n  text-align: center;\n  color: var(--whi-muted);\n}\n@media (max-width: 900px) {\n  .whi-history-item {\n    grid-template-columns: 1fr;\n    text-align: center;\n  }\n  .whi-history-time {\n    white-space: normal;\n  }\n}\n@media (max-width: 640px) {\n  html, body {\n    overflow: auto !important;\n  }\n  .nrdb-ui-page main {\n    min-height: auto;\n    align-items: stretch;\n    overflow: auto;\n    padding: 12px;\n  }\n  .whi-panel {\n    padding: 18px;\n    border-radius: 22px;\n  }\n  .whi-title {\n    font-size: 20px;\n  }\n  .whi-status-box {\n    width: 100%;\n    font-size: 42px;\n  }\n}\n",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "site:style",
+    "className": "",
+    "x": 630,
+    "y": 60,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "whi_ff_mqtt_status",
+    "type": "mqtt in",
+    "z": "whi_ff_tab",
+    "name": "Status Topic",
+    "topic": "factory/inspection/status",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "whi_ff_broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 140,
+    "y": 140,
+    "wires": [
+      [
+        "whi_ff_json_status"
+      ]
+    ]
+  },
+  {
+    "id": "whi_ff_json_status",
+    "type": "json",
+    "z": "whi_ff_tab",
+    "name": "Parse Status JSON",
+    "property": "payload",
+    "action": "",
+    "pretty": false,
+    "x": 360,
+    "y": 140,
+    "wires": [
+      [
+        "whi_ff_fn_status"
+      ]
+    ]
+  },
+  {
+    "id": "whi_ff_fn_status",
+    "type": "function",
+    "z": "whi_ff_tab",
+    "name": "Store Status State",
+    "func": "function frLabel(text) {\n    return String(text || '')\n        .replace(/status=OK/gi, 'Statut OK')\n        .replace(/status=NOK/gi, 'Statut NOK')\n        .replace(/missing:/gi, 'Manquant : ')\n        .replace(/missing /gi, 'manquant ')\n        .replace(/misplaced:/gi, 'Mal positionne : ')\n        .replace(/misplaced /gi, 'mal positionne ')\n        .replace(/failed zone:/gi, 'Zone en echec : ')\n        .replace(/connector/gi, 'connecteur')\n        .replace(/cable/gi, 'cable')\n        .replace(/clip/gi, 'clip');\n}\nconst payload = msg.payload || {};\nconst state = flow.get('whi_dashboard') || { history: [] };\nstate.status = payload.status || 'EN ATTENTE';\nstate.mode = payload.mode || '-';\nstate.confidence = payload.confidence;\nstate.timestamp = payload.timestamp || new Date().toISOString();\nlet note = 'Toutes les regles sont satisfaites';\nif ((payload.missing_classes || []).length) {\n    note = `Manquant : ${payload.missing_classes.map(frLabel).join(', ')}`;\n} else if ((payload.misplaced_classes || []).length) {\n    note = `Mal positionne : ${payload.misplaced_classes.map(frLabel).join(', ')}`;\n} else if ((payload.failed_zone_ids || []).length) {\n    note = `Zone en echec : ${payload.failed_zone_ids.join(', ')}`;\n} else if ((payload.details || []).length) {\n    note = frLabel(payload.details[0]);\n} else if (payload.anomaly_label) {\n    note = frLabel(payload.anomaly_label);\n}\nstate.note = note;\nflow.set('whi_dashboard', state);\nmsg.payload = {\n    status: state.status,\n    mode: state.mode,\n    confidence: state.confidence,\n    timestamp: state.timestamp,\n    note: state.note,\n    history: state.history || []\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 140,
+    "wires": [
+      [
+        "whi_ff_tpl_main"
+      ]
+    ]
+  },
+  {
+    "id": "whi_ff_mqtt_event",
+    "type": "mqtt in",
+    "z": "whi_ff_tab",
+    "name": "Events Topic",
+    "topic": "factory/inspection/events",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "whi_ff_broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 140,
+    "y": 240,
+    "wires": [
+      [
+        "whi_ff_json_event"
+      ]
+    ]
+  },
+  {
+    "id": "whi_ff_json_event",
+    "type": "json",
+    "z": "whi_ff_tab",
+    "name": "Parse Event JSON",
+    "property": "payload",
+    "action": "",
+    "pretty": false,
+    "x": 360,
+    "y": 240,
+    "wires": [
+      [
+        "whi_ff_fn_event"
+      ]
+    ]
+  },
+  {
+    "id": "whi_ff_fn_event",
+    "type": "function",
+    "z": "whi_ff_tab",
+    "name": "Store Event History",
+    "func": "function frLabel(text) {\n    return String(text || '')\n        .replace(/status=OK/gi, 'Statut OK')\n        .replace(/status=NOK/gi, 'Statut NOK')\n        .replace(/missing:/gi, 'Manquant : ')\n        .replace(/missing /gi, 'manquant ')\n        .replace(/misplaced:/gi, 'Mal positionne : ')\n        .replace(/misplaced /gi, 'mal positionne ')\n        .replace(/failed zone:/gi, 'Zone en echec : ')\n        .replace(/connector/gi, 'connecteur')\n        .replace(/cable/gi, 'cable')\n        .replace(/clip/gi, 'clip');\n}\nconst payload = msg.payload || {};\nconst state = flow.get('whi_dashboard') || { history: [] };\nlet history = Array.isArray(state.history) ? state.history : [];\nconst entry = {\n    status: payload.status || state.status || 'INFO',\n    message: frLabel(payload.message || payload.anomaly_label || 'Evenement d inspection'),\n    timestamp: payload.timestamp || new Date().toISOString()\n};\nconst first = history[0];\nif (first && first.status === entry.status && first.message === entry.message) {\n    history[0] = entry;\n} else {\n    history.unshift(entry);\n}\nhistory = history.slice(0, 4);\nstate.history = history;\nflow.set('whi_dashboard', state);\nmsg.payload = {\n    status: state.status || 'EN ATTENTE',\n    mode: state.mode || '-',\n    confidence: state.confidence,\n    timestamp: state.timestamp || entry.timestamp,\n    note: state.note || 'En attente de donnees',\n    history: state.history\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 240,
+    "wires": [
+      [
+        "whi_ff_tpl_main"
+      ]
+    ]
+  },
+  {
+    "id": "whi_ff_tpl_main",
+    "type": "ui-template",
+    "z": "whi_ff_tab",
+    "group": "whi_ff_group_main",
+    "name": "Human Main Screen",
+    "order": 1,
+    "width": 12,
+    "height": 10,
+    "head": "",
+    "format": "<template>\n  <div class='whi-shell'>\n    <div class='whi-panel'>\n      <div class='whi-header'>\n        <div>\n          <div class='whi-kicker'>Inspection du faisceau</div>\n          <div class='whi-title'>Surveillance du poste</div>\n        </div>\n        <div class='whi-time'>{{ formattedTime }}</div>\n      </div>\n      <div class='whi-status-box' :class='statusClass'>{{ displayStatus }}</div>\n      <div class='whi-note'>{{ p.note || 'En attente des donnees d inspection' }}</div>\n      <div class='whi-history'>\n        <div class='whi-history-head'>Historique recent</div>\n        <div v-if='history.length' class='whi-history-list'>\n          <div v-for='(item, index) in history' :key='index' class='whi-history-item'>\n            <div class='whi-history-badge' :class='item.status === \"OK\" ? \"is-ok\" : item.status === \"NOK\" ? \"is-nok\" : \"\"'>{{ item.status }}</div>\n            <div class='whi-history-text'>{{ item.message }}</div>\n            <div class='whi-history-time'>{{ formatTs(item.timestamp) }}</div>\n          </div>\n        </div>\n        <div v-else class='whi-empty'>Aucun evenement pour le moment.</div>\n      </div>\n    </div>\n  </div>\n</template>\n<script>\nexport default {\n  computed: {\n    p () { return this.msg?.payload || {} },\n    statusClass () {\n      if (this.p.status === 'OK') return 'is-ok'\n      if (this.p.status === 'NOK') return 'is-nok'\n      return 'is-idle'\n    },\n    displayStatus () {\n      return this.p.status || 'EN ATTENTE'\n    },\n    formattedTime () {\n      if (!this.p.timestamp) return 'En attente MQTT'\n      const d = new Date(this.p.timestamp)\n      return Number.isNaN(d.getTime()) ? this.p.timestamp : d.toLocaleString('fr-FR')\n    },\n    history () {\n      return this.p.history || []\n    }\n  },\n  methods: {\n    formatTs (ts) {\n      if (!ts) return '-'\n      const d = new Date(ts)\n      return Number.isNaN(d.getTime()) ? ts : d.toLocaleString('fr-FR')\n    }\n  }\n}\n</script>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "whi-widget whi-widget-main",
+    "x": 850,
+    "y": 190,
+    "wires": [
+      []
+    ]
+  }
+]

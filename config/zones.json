@@ -1,0 +1,40 @@
+{
+  "frame_size": {
+    "width": 1280,
+    "height": 720
+  },
+  "zones": [
+    {
+      "id": "connector_left",
+      "name": "Left Connector Zone",
+      "required_class": "connector",
+      "min_confidence": 0.45,
+      "rule_type": "required_in_zone",
+      "polygon": [[70, 250], [260, 250], [260, 430], [70, 430]]
+    },
+    {
+      "id": "connector_right",
+      "name": "Right Connector Zone",
+      "required_class": "connector",
+      "min_confidence": 0.45,
+      "rule_type": "required_in_zone",
+      "polygon": [[1020, 250], [1210, 250], [1210, 430], [1020, 430]]
+    },
+    {
+      "id": "clip_center",
+      "name": "Center Clip Zone",
+      "required_class": "clip",
+      "min_confidence": 0.45,
+      "rule_type": "required_in_zone",
+      "polygon": [[560, 120], [740, 120], [740, 300], [560, 300]]
+    },
+    {
+      "id": "cable_path",
+      "name": "Cable Path Zone",
+      "required_class": "cable",
+      "min_confidence": 0.25,
+      "rule_type": "required_in_zone",
+      "polygon": [[350, 280], [930, 280], [930, 470], [350, 470]]
+    }
+  ]
+}
