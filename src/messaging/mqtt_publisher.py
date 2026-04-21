@@ -26,6 +26,7 @@ class MqttPublisher:
         self.qos = int(publisher_cfg.get("qos", 0))
         self.retain_status = bool(publisher_cfg.get("retain_status", True))
         self.retain_metrics = bool(publisher_cfg.get("retain_metrics", True))
+        self.retain_video_stream = bool(publisher_cfg.get("retain_video_stream", True))
 
     def connect(self) -> None:
         if not self.enabled:
@@ -56,9 +57,10 @@ class MqttPublisher:
         if not self.client or not self.connected:
             return False
 
-        retain = topic_key in {"status", "metrics"} and (
+        retain = topic_key in {"status", "metrics", "video_stream"} and (
             (topic_key == "status" and self.retain_status)
             or (topic_key == "metrics" and self.retain_metrics)
+            or (topic_key == "video_stream" and self.retain_video_stream)
         )
 
         message = json.dumps(payload)

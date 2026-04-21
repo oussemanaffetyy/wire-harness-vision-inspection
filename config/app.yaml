@@ -3,12 +3,13 @@ app:
   version: 0.1.0
 
 runtime:
-  show_window: true
+  show_window: false
   loop_video: true
   save_nok_snapshots: true
   snapshot_dir: data/snapshots
   snapshot_cooldown_frames: 20
-  window_name: Wire Harness Inspection
+  video_stream_cooldown_frames: 0
+  log_dir: null
 
 source:
   default_offline_video: data/videos/demo_wire_harness.mp4

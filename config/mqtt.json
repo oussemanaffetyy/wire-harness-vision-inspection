@@ -9,12 +9,14 @@
   "publisher": {
     "qos": 0,
     "retain_status": true,
-    "retain_metrics": true
+    "retain_metrics": true,
+    "retain_video_stream": true
   },
   "topics": {
     "status": "factory/inspection/status",
     "metrics": "factory/inspection/metrics",
     "events": "factory/inspection/events",
-    "snapshot": "factory/inspection/snapshot"
+    "snapshot": "factory/inspection/snapshot",
+    "video_stream": "factory/inspection/video_stream"
   }
 }

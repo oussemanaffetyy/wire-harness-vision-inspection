@@ -14,6 +14,7 @@ def build_status_payload(
     source_name: str,
     snapshot_path: str | None = None,
 ) -> dict[str, Any]:
+    note = result.details[0] if result.details else f"status={result.status}"
     return {
         "timestamp": utc_now_iso(),
         "status": result.status,
@@ -29,6 +30,7 @@ def build_status_payload(
         "matched_zone_ids": result.matched_zone_ids,
         "failed_zone_ids": result.failed_zone_ids,
         "details": result.details,
+        "note": note,
         "snapshot_path": snapshot_path,
     }
 

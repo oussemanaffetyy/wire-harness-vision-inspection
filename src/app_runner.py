@@ -4,6 +4,7 @@ import json
 import time
 from argparse import Namespace
 from collections import deque
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ import cv2
 import yaml
 
 from src.detector import AnomalyDetector, BaseDetector, MockDetector, YoloDetector
+from src.inspection_logger import InspectionLogger
 from src.messaging import MqttPublisher
 from src.ui_payload import (
     build_event_payload,
@@ -49,11 +51,12 @@ def run_application(args: Namespace) -> None:
     person_mask_cfg = visualization_cfg.get("person_mask", {})
 
     mode = args.mode
-    display_enabled = not args.no_display and bool(runtime_cfg.get("show_window", True))
     snapshot_dir = _resolve_path(runtime_cfg.get("snapshot_dir", "data/snapshots"))
     snapshot_cooldown_frames = int(runtime_cfg.get("snapshot_cooldown_frames", 20))
     save_nok_snapshots = bool(runtime_cfg.get("save_nok_snapshots", True))
-    window_name = runtime_cfg.get("window_name", "Wire Harness Inspection")
+    
+    log_dir = runtime_cfg.get("log_dir")
+    video_stream_cooldown = int(runtime_cfg.get("video_stream_cooldown_frames", 5))
 
     if mode == "offline":
         configured_video = source_cfg.get("default_offline_video")
@@ -91,8 +94,9 @@ def run_application(args: Namespace) -> None:
         anomaly_threshold=float(validation_cfg.get("anomaly_threshold", 0.55)),
     )
     mqtt_publisher = MqttPublisher(mqtt_config, logger)
+    inspection_logger = InspectionLogger(log_dir=log_dir, logger=logger)
 
-    logger.info("Starting inspection in %s mode with detector=%s", mode, detector.name)
+    logger.info("Starting inspection in %s mode with detector=%s (headless, no GUI)", mode, detector.name)
     source.open()
     mqtt_publisher.connect()
 
@@ -103,6 +107,7 @@ def run_application(args: Namespace) -> None:
     last_status: str | None = None
     last_snapshot_frame = -snapshot_cooldown_frames
     last_error_label: str | None = None
+    last_video_stream_frame = -video_stream_cooldown
 
     try:
         while True:
@@ -180,6 +185,21 @@ def run_application(args: Namespace) -> None:
 
             mqtt_publisher.publish("status", status_payload)
             mqtt_publisher.publish("metrics", metrics_payload)
+            
+            inspection_logger.log_from_validation_result(validation_result)
+
+            should_stream_video = (
+                video_stream_cooldown <= 0
+                or (packet.frame_index - last_video_stream_frame) >= video_stream_cooldown
+            )
+            if should_stream_video:
+                frame_base64 = encode_frame_to_base64(annotated_frame)
+                if frame_base64:
+                    mqtt_publisher.publish("video_stream", {"image_base64": frame_base64})
+                    last_video_stream_frame = packet.frame_index
+                    logger.info(f"✓ Published video frame {packet.frame_index}, size: {len(frame_base64)} bytes")
+                else:
+                    logger.warning(f"✗ Failed to encode frame {packet.frame_index} to Base64")
 
             event_type: str | None = None
             if validation_result.status != last_status:
@@ -213,20 +233,12 @@ def run_application(args: Namespace) -> None:
                 )
                 mqtt_publisher.publish("snapshot", snapshot_payload)
 
-            if display_enabled:
-                cv2.imshow(window_name, annotated_frame)
-                key = cv2.waitKey(1) & 0xFF
-                if key in (ord("q"), 27):
-                    logger.info("Exit requested by user.")
-                    break
-
             last_status = validation_result.status
 
     finally:
         source.release()
         mqtt_publisher.close()
-        if display_enabled:
-            cv2.destroyAllWindows()
+        logger.info("Application shutdown complete.")
 
 
 def _create_detector(
