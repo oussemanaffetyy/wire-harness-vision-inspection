@@ -197,9 +197,9 @@ def run_application(args: Namespace) -> None:
                 if frame_base64:
                     mqtt_publisher.publish("video_stream", {"image_base64": frame_base64})
                     last_video_stream_frame = packet.frame_index
-                    logger.info(f"✓ Published video frame {packet.frame_index}, size: {len(frame_base64)} bytes")
+                    logger.info("Published video frame %s, size: %s bytes", packet.frame_index, len(frame_base64))
                 else:
-                    logger.warning(f"✗ Failed to encode frame {packet.frame_index} to Base64")
+                    logger.warning("Failed to encode frame %s to Base64", packet.frame_index)
 
             event_type: str | None = None
             if validation_result.status != last_status:
