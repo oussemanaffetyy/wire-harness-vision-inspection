@@ -8,11 +8,17 @@ from pathlib import Path
 class InspectionLogger:
     """Logs inspection results to a single TXT file."""
 
-    def __init__(self, config: dict | None = None) -> None:
+    def __init__(
+        self,
+        config: dict | None = None,
+        *,
+        log_dir: str | Path | None = None,
+        logger: logging.Logger | None = None,
+    ) -> None:
         self.config = config or {}
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
 
-        self.log_dir = Path("test")
+        self.log_dir = Path(log_dir) if log_dir is not None else Path("test")
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.log_dir / "IACom.txt"
 
@@ -37,3 +43,15 @@ class InspectionLogger:
             self.logger.debug("Logged %s to %s", status, self.log_file)
         except Exception as exc:
             self.logger.error("Failed to write to %s: %s", self.log_file, exc)
+
+    def log_status(self, status: str, details: str | None = None) -> None:
+        """Backward-compatible alias for older callers."""
+        self.log_result(status, details or "")
+
+    def log_from_validation_result(self, result: object) -> None:
+        """Backward-compatible helper for validation result objects."""
+        status = getattr(result, "status", None)
+        details = getattr(result, "details", None)
+        detail_text = "; ".join(details) if isinstance(details, list) else (details or "")
+        if status is not None:
+            self.log_result(status, detail_text)
