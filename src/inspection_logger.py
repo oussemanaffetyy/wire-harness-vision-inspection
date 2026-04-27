@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -18,7 +19,12 @@ class InspectionLogger:
         self.config = config or {}
         self.logger = logger or logging.getLogger(__name__)
 
-        self.log_dir = Path(log_dir) if log_dir is not None else Path("test")
+        if log_dir is not None:
+            self.log_dir = Path(log_dir)
+        elif sys.platform == "win32":
+            self.log_dir = Path("C:/test")
+        else:
+            self.log_dir = Path("test")
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.log_dir / "IACom.txt"
 
