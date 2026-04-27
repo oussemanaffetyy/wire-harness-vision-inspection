@@ -19,6 +19,7 @@ from src.ui_payload import (
     build_status_payload,
 )
 from src.utils import (
+    InspectionResultLogger,
     PersonMasker,
     encode_frame_to_base64,
     render_inspection_overlay,
@@ -86,6 +87,7 @@ def run_application(args: Namespace) -> None:
 
     detector = _create_detector(args, detector_cfg, zones, logger)
     person_masker = _create_person_masker(person_mask_cfg, logger)
+    inspection_result_logger = InspectionResultLogger()
     validator = ZoneValidator(
         zones=zones,
         anomaly_threshold=float(validation_cfg.get("anomaly_threshold", 0.55)),
@@ -147,6 +149,11 @@ def run_application(args: Namespace) -> None:
             else:
                 nok_count += 1
                 last_error_label = _derive_error_label(validation_result)
+
+            inspection_result_logger.log_result(
+                validation_result.status,
+                "; ".join(validation_result.details) if validation_result.details else "",
+            )
 
             snapshot_path: str | None = None
             snapshot_base64: str | None = None
