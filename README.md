@@ -6,7 +6,7 @@ Aucun service cloud n'est nécessaire pendant la démonstration.
 
 ## Démonstration finale
 
-`python run.py demo` enchaîne **test1.MOV puis test2.MOV, en boucle**. Le modèle
+`python run.py` enchaîne **test1.MOV puis test2.MOV, en boucle**. Le modèle
 n'est chargé qu'une fois. La connexion MQTT, la fenêtre et les compteurs restent
 actifs entre les vidéos ; les indices d'images sont continus.
 
@@ -36,20 +36,27 @@ Le verrou npm inclut les correctifs des dépendances `npm` et `qs` via
 
 Toutes les commandes suivantes s'exécutent **à la racine de ce dossier**.
 
-### Windows : PowerShell ou CMD
+### Windows : CMD (recommandé)
 
-```powershell
+Dans VSCode, choisir **Terminal > Nouveau terminal**, puis **Command Prompt**
+(Invite de commandes) dans le menu du terminal. Si le terminal commence par
+`PS`, taper simplement `cmd` pour passer à CMD.
+
+Installation à faire une seule fois, depuis le dossier du projet :
+
+```bat
 py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pip check
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip check
 npm.cmd --prefix nodered ci
 ```
 
-Ces commandes appellent directement Python dans la venv : aucune activation
-ni modification de la politique PowerShell n'est nécessaire. Ne pas utiliser
-`source`, qui est une commande Mac/Linux. Si une venv existe avec un autre
-Python, la renommer avant d'en créer une nouvelle.
+La ligne `activate` permet ensuite d'écrire simplement `python`. Aucune
+modification de la politique PowerShell n'est nécessaire puisqu'on utilise CMD.
+Ne pas utiliser `source`, qui est une commande Mac/Linux. Si une venv existe
+avec un autre Python, la renommer avant d'en créer une nouvelle.
 
 ### Mac Intel
 
@@ -66,56 +73,74 @@ fournis permettent une exécution locale. La combinaison historique PyTorch
 2.2.2 vise Python 3.11 sur Mac Intel/Windows x64, pas toutes les plateformes.
 SAM 2 s'installe séparément dans Colab, **jamais dans cette venv**.
 
-## Lancement en trois terminaux
+## Lancement quotidien : deux terminaux
 
-Ouvrir trois terminaux à la racine du projet. Sur Mac, remplacer
-`.\.venv\Scripts\python.exe` par `.venv/bin/python` et `npm.cmd` par `npm`.
+Ouvrir **deux terminaux CMD**, tous les deux à la racine du projet
+(le dossier qui contient `run.py` et `node-red.cmd`). Par exemple :
 
-### 1. Courtier MQTT
-
-```powershell
-.\.venv\Scripts\python.exe scripts/start_broker.py
+```bat
+cd /d "D:\wire-harness-vision-inspection"
 ```
 
-Le courtier Python écoute uniquement sur `127.0.0.1:1883`. Si Mosquitto ou un
-autre courtier fonctionne déjà sur ce port, **ne pas en lancer un deuxième**.
-Node-RED n'est pas lui-même le courtier MQTT.
+Adapter ce chemin si le projet est dans un autre dossier.
 
-### 2. Dashboard Node-RED
+### Terminal 1 : dashboard
 
-```powershell
-npm.cmd --prefix nodered start
+```bat
+node-red
 ```
 
 Ouvrir **http://127.0.0.1:1880/inspection/**.
 
-Cette commande charge directement le flow fourni : **aucun import manuel**
-n'est nécessaire. Elle utilise `nodered/runtime/`, séparé du dossier personnel
-`.node-red`. Si une autre instance occupe le port 1880, l'arrêter ou utiliser
-`npm.cmd --prefix nodered start -- --port 1881`, puis ouvrir le port 1881.
+Dans CMD, le petit lanceur `node-red.cmd` du projet utilise la version locale
+installée à l'étape précédente. Il charge directement le flow fourni :
+**aucun import manuel ni installation globale de Node-RED n'est nécessaire**.
+Il utilise `nodered/runtime/`, sans modifier le dossier personnel `.node-red`.
+Ne pas ouvrir deux instances simultanément sur le port 1880. Pour un autre
+port : `node-red --port 1881`, puis ouvrir le dashboard sur le port 1881.
 
-Pour conserver une installation Node-RED existante, installer
-`@flowfuse/node-red-dashboard`, puis importer
-`nodered/wire_harness_dashboard_flow.json` **une seule fois**, en remplaçant
-l'ancien flow d'inspection. Vérifier qu'il reste un seul `ui-base`. Ne pas
-supprimer les autres flows personnels. Le projet n'utilise pas l'ancien
-dashboard Angular. Voir le
-[guide officiel FlowFuse](https://dashboard.flowfuse.com/getting-started.html).
+Le dashboard peut signaler MQTT déconnecté tant que le terminal 2 n'est pas
+lancé ; il se reconnecte automatiquement ensuite.
 
-### 3. Analyse des vidéos
+### Terminal 2 : inspection
 
-```powershell
-.\.venv\Scripts\python.exe run.py demo
+```bat
+.venv\Scripts\activate
+python run.py
 ```
+
+L'activation se fait une fois par nouveau terminal. `python run.py` lance
+directement la démo, sans menu ni arguments, avec le modèle `models/best_v02.pt`.
+Le courtier MQTT démarre automatiquement sur `127.0.0.1:1883` si le port est
+libre. Si un service écoute déjà sur ce port, aucun deuxième courtier n'est
+lancé : ce service doit être un courtier MQTT. À l'arrêt de Python, seul le
+courtier démarré par ce lancement est arrêté. Node-RED reste ouvert.
+
+**Il n'y a plus de troisième terminal à ouvrir.** Pour un courtier configuré
+sur une autre adresse ou un autre port, le démarrer séparément comme auparavant.
 
 Les masques s'affichent localement et sur Node-RED : connecteur rouge, clip
 bleu, câble vert. Python calcule le statut ; Node-RED ne recalcule pas la règle.
+Les résultats sont ajoutés dans `C:\test\IACom.txt` sous Windows.
+
+Pour arrêter : `Q` dans la vidéo, puis `Ctrl+C` dans le terminal Node-RED.
+
+### Autres terminaux et options
+
+Sur Mac : `npm --prefix nodered start` dans le premier terminal,
+`source .venv/bin/activate` puis `python run.py` dans le second.
+
+Si vous gardez PowerShell : `npm.cmd --prefix nodered start`, puis dans l'autre
+terminal `.\.venv\Scripts\python.exe run.py`. La commande courte `node-red`
+du projet nécessite **CMD** ; PowerShell n'exécute pas les fichiers du dossier
+courant par leur simple nom.
 
 Variantes, avec la venv activée ou son chemin Python complet :
 
 ```bash
 python run.py demo --once
 python run.py demo --no-display
+python run.py menu
 python run.py offline --video data/videos/test1.MOV
 python run.py offline --video data/videos/test2.MOV
 python run.py webcam --camera 0

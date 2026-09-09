@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 try:
     import yaml
 except ImportError as exc:  # pragma: no cover - friendly startup message
     raise SystemExit(
-        "Missing Python dependencies. Activate the project virtual environment first with "
-        "'source .venv/bin/activate' or run '.venv/bin/python run.py'."
+        "Dependances manquantes. Dans CMD Windows : .venv\\Scripts\\activate puis "
+        "python -m pip install -r requirements.txt. Sur Mac/Linux : source .venv/bin/activate."
     ) from exc
 
 
@@ -26,8 +27,8 @@ def build_parser() -> argparse.ArgumentParser:
         "preset",
         nargs="?",
         choices=["menu", "demo", "offline", "webcam", "esp"],
-        default="menu",
-        help="Choose a simple execution preset.",
+        default="demo",
+        help="Execution preset (default: continuous demo). Use menu for interactive choices.",
     )
     parser.add_argument(
         "--video",
@@ -98,8 +99,12 @@ def build_runtime_args(
 
 def run_inspection(args: argparse.Namespace) -> None:
     from src.app_runner import run_application
+    from scripts.start_broker import local_broker
 
-    run_application(args)
+    with Path(args.mqtt_config).open("r", encoding="utf-8") as handle:
+        mqtt_config = json.load(handle)
+    with local_broker(mqtt_config, enabled=not args.no_mqtt):
+        run_application(args)
 
 
 def run_offline(config: dict, video: str | None, rotation: int | None, no_display: bool, **runtime_options) -> None:
@@ -213,4 +218,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Inspection arretee.")
