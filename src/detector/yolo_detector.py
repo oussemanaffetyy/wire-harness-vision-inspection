@@ -18,13 +18,14 @@ class YoloDetector(BaseDetector):
 
     def __init__(self, model_path: str, settings: dict[str, Any]) -> None:
         if YOLO is None:
-            raise ImportError("ultralytics is not installed. Install requirements.txt first.")
+            raise ImportError("ultralytics is not installed. Install requirements-yolo.txt first.")
 
         model_file = Path(model_path)
         if not model_file.exists():
             raise FileNotFoundError(f"YOLO model not found: {model_file}")
 
         self.model = YOLO(str(model_file))
+        self.model_path = model_file.resolve()
         self.confidence_threshold = float(settings.get("confidence_threshold", 0.35))
         self.image_size = int(settings.get("image_size", 640))
         self.device = settings.get("device", "cpu")
@@ -36,13 +37,19 @@ class YoloDetector(BaseDetector):
             imgsz=self.image_size,
             device=self.device,
             verbose=False,
+            retina_masks=True,
         )
         prediction = predictions[0]
 
         detections: list[Detection] = []
         names = prediction.names if hasattr(prediction, "names") else {}
+        masks = None
+        if prediction.masks is not None:
+            masks = prediction.masks.data.detach().cpu().numpy() > 0.5
+            if masks.shape != (len(prediction.boxes), *frame.shape[:2]):
+                raise ValueError("YOLO masks are not aligned with the source frame or detection boxes.")
 
-        for box in prediction.boxes:
+        for index, box in enumerate(prediction.boxes):
             x1, y1, x2, y2 = [int(value) for value in box.xyxy[0].tolist()]
             cls_id = int(box.cls[0].item())
             label = names.get(cls_id, str(cls_id))
@@ -54,6 +61,7 @@ class YoloDetector(BaseDetector):
                     bbox=(x1, y1, x2, y2),
                     center=((x1 + x2) // 2, (y1 + y2) // 2),
                     metadata={"class_id": cls_id},
+                    mask=masks[index].copy() if masks is not None else None,
                 )
             )
 

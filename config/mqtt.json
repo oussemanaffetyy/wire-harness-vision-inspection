@@ -4,7 +4,7 @@
     "host": "127.0.0.1",
     "port": 1883,
     "keepalive": 60,
-    "client_id": "wire-harness-inspector"
+    "client_id": "wire-harness-python"
   },
   "publisher": {
     "qos": 0,

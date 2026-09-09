@@ -3,16 +3,19 @@ app:
   version: 0.1.0
 
 runtime:
-  show_window: false
-  loop_video: true
+  show_window: true
+  loop_video: false
   save_nok_snapshots: true
   snapshot_dir: data/snapshots
   snapshot_cooldown_frames: 20
   video_stream_cooldown_frames: 0
-  log_dir: null
+  log_dir: data/logs
 
 source:
-  default_offline_video: data/videos/demo_wire_harness.mp4
+  demo_videos:
+    - data/videos/test1.MOV
+    - data/videos/test2.MOV
+  default_offline_video: data/videos/test1.MOV
   default_camera_index: 0
   default_stream_url: ""
   frame_rotation: 0
@@ -21,7 +24,7 @@ source:
 
 detector:
   mode: yolo
-  yolo_model_path: data/models/best.pt
+  yolo_model_path: models/best_v02.pt
   anomaly_mode: false
   yolo:
     confidence_threshold: 0.35
@@ -34,11 +37,18 @@ detector:
     min_foreground_ratio: 0.010
 
 validation:
+  mode: clip_attachment
   anomaly_threshold: 0.55
+  clip_attachment:
+    min_confidence: 0.35
+    # NOK at this box-edge distance (native pixels) or mask intersection.
+    # Otherwise OK by default, including missing detections; no cable test.
+    connector_near_px: 20.0
 
 visualization:
-  draw_zones: true
-  draw_boxes: true
+  draw_zones: false
+  draw_boxes: false
+  draw_masks: true
   show_labels: true
   person_mask:
     enabled: false

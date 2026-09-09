@@ -11,11 +11,18 @@ class InspectionLogger:
 
     def __init__(
         self,
-        config: dict | None = None,
-        *,
         log_dir: str | Path | None = None,
         logger: logging.Logger | None = None,
+        config: dict | None = None,
     ) -> None:
+        """
+        Initialize the InspectionLogger.
+
+        Args:
+            log_dir: The directory where logs should be saved.
+            logger: The logging.Logger instance to use.
+            config: Optional configuration dictionary.
+        """
         self.config = config or {}
         self.logger = logger or logging.getLogger(__name__)
 
@@ -25,6 +32,7 @@ class InspectionLogger:
             self.log_dir = Path("C:/test")
         else:
             self.log_dir = Path("test")
+
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.log_dir / "IACom.txt"
 
@@ -39,6 +47,8 @@ class InspectionLogger:
                 message = f"[{timestamp}] - Test NOK: {details}\n"
             else:
                 message = f"[{timestamp}] - Test NOK\n"
+        elif status == "INDETERMINE":
+            message = f"[{timestamp}] - INDETERMINE: {details}\n"
         else:
             self.logger.warning("Unknown status: %s", status)
             return
@@ -59,5 +69,6 @@ class InspectionLogger:
         status = getattr(result, "status", None)
         details = getattr(result, "details", None)
         detail_text = "; ".join(details) if isinstance(details, list) else (details or "")
+
         if status is not None:
             self.log_result(status, detail_text)

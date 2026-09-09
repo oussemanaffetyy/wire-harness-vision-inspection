@@ -5,6 +5,15 @@ __pycache__/
 *.pyd
 .DS_Store
 .ipynb_checkpoints/
+.pytest_cache/
+node_modules/
+nodered/runtime/
+*_cred.json
+*.log
+*.bak
+.env
+test/*.txt
+data/annotations_sam2*/
 
 data/logs/*
 !data/logs/.gitkeep

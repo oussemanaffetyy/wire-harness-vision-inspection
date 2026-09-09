@@ -25,9 +25,15 @@ class VideoSource:
         camera_width: int | None = None,
         camera_height: int | None = None,
         frame_rotation: int = 0,
+        video_paths: list[str] | None = None,
     ) -> None:
         self.mode = mode
         self.video_path = video_path
+        if video_path and video_paths:
+            raise ValueError("Use video_path or video_paths, not both.")
+        self.video_paths = list(video_paths or ([video_path] if video_path else []))
+        self.video_number = 0
+        self.source_frame_index = 0
         self.camera_index = camera_index
         self.stream_url = stream_url
         self.loop_video = loop_video
@@ -38,10 +44,14 @@ class VideoSource:
         self.frame_index = 0
 
     def open(self) -> None:
+        self.release()
+        self.frame_index = 0
+        self.video_number = 0
+        self.source_frame_index = 0
         if self.mode == "offline":
-            if not self.video_path:
+            if not self.video_paths:
                 raise ValueError("Offline mode requires a video path.")
-            self.capture = cv2.VideoCapture(self.video_path)
+            self.capture = cv2.VideoCapture(self.video_paths[0])
         else:
             live_source: int | str = self.stream_url if self.stream_url else self.camera_index
             self.capture = cv2.VideoCapture(live_source)
@@ -53,20 +63,35 @@ class VideoSource:
 
         if not self.capture or not self.capture.isOpened():
             source_name = self._source_name()
+            self.release()
             raise RuntimeError(f"Unable to open video source: {source_name}")
 
     def read(self) -> FramePacket | None:
         if self.capture is None:
             raise RuntimeError("Video source is not open.")
 
-        ok, frame = self.capture.read()
-        if not ok:
-            if self.mode == "offline" and self.loop_video:
-                self.capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                self.frame_index = 0
-                ok, frame = self.capture.read()
-            if not ok:
+        while True:
+            ok, frame = self.capture.read()
+            if ok:
+                break
+            if self.mode != "offline":
                 return None
+            if self.source_frame_index == 0:
+                raise RuntimeError(f"Video contains no readable frames: {self._source_name()}")
+            next_video = self.video_number + 1
+            if next_video == len(self.video_paths):
+                if not self.loop_video:
+                    return None
+                next_video = 0
+            # Switch capture, not application: model, MQTT and counters stay alive.
+            self.release()
+            self.video_number = next_video
+            self.source_frame_index = 0
+            self.capture = cv2.VideoCapture(self.video_paths[self.video_number])
+            if not self.capture.isOpened():
+                source_name = self._source_name()
+                self.release()
+                raise RuntimeError(f"Unable to open video source: {source_name}")
 
         frame = self._apply_rotation(frame)
 
@@ -78,6 +103,7 @@ class VideoSource:
             timestamp_ms=timestamp_ms,
         )
         self.frame_index += 1
+        self.source_frame_index += 1
         return packet
 
     def release(self) -> None:
@@ -87,7 +113,7 @@ class VideoSource:
 
     def _source_name(self) -> str:
         if self.mode == "offline":
-            return self.video_path or "offline_video"
+            return self.video_paths[self.video_number] if self.video_paths else "offline_video"
         if self.stream_url:
             return self.stream_url
         return f"camera:{self.camera_index}"

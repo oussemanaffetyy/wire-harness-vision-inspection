@@ -63,6 +63,10 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable the OpenCV display window.",
     )
+    parser.add_argument("--no-mqtt", action="store_true", help="Run without MQTT publishing.")
+    parser.add_argument("--max-frames", type=int, default=0, help="Stop after N frames (0: unlimited).")
+    parser.add_argument("--videos", nargs="+", help="Ordered offline playlist; do not combine with --video.")
+    parser.add_argument("--loop", action=argparse.BooleanOptionalAction, default=None, help="Loop the entire offline playlist.")
     return parser
 
 

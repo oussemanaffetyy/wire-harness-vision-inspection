@@ -14,6 +14,7 @@ class Detection:
     bbox: tuple[int, int, int, int]
     center: tuple[int, int]
     metadata: dict[str, Any] = field(default_factory=dict)
+    mask: np.ndarray | None = field(default=None, repr=False, compare=False)
 
 
 @dataclass(slots=True)

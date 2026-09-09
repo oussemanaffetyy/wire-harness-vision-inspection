@@ -20,6 +20,7 @@ class ValidationResult:
     anomaly_label: str | None = None
     details: list[str] = field(default_factory=list)
     detector_name: str = "unknown"
+    relation: dict[str, Any] = field(default_factory=dict)
 
 
 class ZoneValidator:

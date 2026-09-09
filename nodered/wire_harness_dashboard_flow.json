@@ -4,7 +4,7 @@
     "type": "tab",
     "label": "Wire Harness Inspection",
     "disabled": false,
-    "info": ""
+    "info": "Demo YOLOv8-Seg : video annotee + statut OK/NOK via MQTT local. Installer @flowfuse/node-red-dashboard. Importer une seule fois ; conserver un seul ui-base. Identifiants MQTT distincts pour Python et Node-RED. Dashboard : http://127.0.0.1:1880/inspection/"
   },
   {
     "id": "whi_broker",
@@ -12,7 +12,7 @@
     "name": "Local MQTT",
     "broker": "127.0.0.1",
     "port": "1883",
-    "clientid": "wire-harness-inspector",
+    "clientid": "wire-harness-dashboard",
     "autoConnect": true,
     "usetls": false,
     "protocolVersion": "4",

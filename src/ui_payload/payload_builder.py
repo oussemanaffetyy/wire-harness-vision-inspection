@@ -32,6 +32,7 @@ def build_status_payload(
         "details": result.details,
         "note": note,
         "snapshot_path": snapshot_path,
+        "relation": result.relation,
     }
 
 
@@ -77,6 +78,7 @@ def build_event_payload(
         "misplaced_classes": result.misplaced_classes,
         "anomaly_score": result.anomaly_score,
         "anomaly_label": result.anomaly_label,
+        "relation": result.relation,
     }
 
 

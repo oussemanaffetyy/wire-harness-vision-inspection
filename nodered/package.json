@@ -1,0 +1,20 @@
+{
+  "name": "wire-harness-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local video and inspection status dashboard",
+  "scripts": {
+    "start": "node-red --userDir ./runtime --settings ./settings.js"
+  },
+  "dependencies": {
+    "@flowfuse/node-red-dashboard": "1.30.2",
+    "node-red": "4.1.15"
+  },
+  "engines": {
+    "node": "^20.17.0 || >=22.9.0"
+  },
+  "overrides": {
+    "npm": "11.19.1",
+    "qs": "6.16.0"
+  }
+}

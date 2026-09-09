@@ -4,7 +4,6 @@ import json
 import time
 from argparse import Namespace
 from collections import deque
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +26,7 @@ from src.utils import (
     save_snapshot,
     setup_logger,
 )
-from src.validation import ZoneValidator
+from src.validation import ClipAttachmentValidator, ZoneValidator
 from src.video_source import VideoSource
 
 
@@ -40,6 +39,8 @@ def run_application(args: Namespace) -> None:
     app_config = _load_yaml(_resolve_path(args.config))
     zones_config = _load_json(_resolve_path(args.zones))
     mqtt_config = _load_json(_resolve_path(args.mqtt_config))
+    if getattr(args, "no_mqtt", False):
+        mqtt_config = {**mqtt_config, "enabled": False}
 
     zones = zones_config.get("zones", [])
     zones_frame_size = zones_config.get("frame_size", {})
@@ -51,26 +52,32 @@ def run_application(args: Namespace) -> None:
     person_mask_cfg = visualization_cfg.get("person_mask", {})
 
     mode = args.mode
+    show_window = bool(runtime_cfg.get("show_window", True)) and not args.no_display
+    max_frames = int(getattr(args, "max_frames", 0))
+    if max_frames < 0:
+        raise ValueError("--max-frames must be >= 0.")
     snapshot_dir = _resolve_path(runtime_cfg.get("snapshot_dir", "data/snapshots"))
     snapshot_cooldown_frames = int(runtime_cfg.get("snapshot_cooldown_frames", 20))
     save_nok_snapshots = bool(runtime_cfg.get("save_nok_snapshots", True))
     
-    log_dir = runtime_cfg.get("log_dir")
+    log_dir = _resolve_path(runtime_cfg.get("log_dir"))
     video_stream_cooldown = int(runtime_cfg.get("video_stream_cooldown_frames", 5))
 
     if mode == "offline":
         configured_video = source_cfg.get("default_offline_video")
-        video_path = _resolve_path(args.video or configured_video)
+        requested_videos = getattr(args, "videos", None)
+        if requested_videos and args.video:
+            raise ValueError("Use --video or --videos, not both.")
+        video_paths = [_resolve_path(path) for path in (requested_videos or [args.video or configured_video])]
         frame_rotation = args.rotation if getattr(args, "rotation", None) is not None else int(source_cfg.get("frame_rotation", 0) or 0)
-        if video_path is None or not video_path.exists():
+        if any(path is None or not path.is_file() for path in video_paths):
             raise FileNotFoundError(
-                "Offline mode requires a valid video file. "
-                "Use --video or generate data/videos/demo_wire_harness.mp4 first."
+                "Offline mode requires readable video files. Check --video or source.demo_videos in config/app.yaml."
             )
         source = VideoSource(
             mode="offline",
-            video_path=str(video_path),
-            loop_video=bool(runtime_cfg.get("loop_video", True)),
+            video_paths=[str(path) for path in video_paths],
+            loop_video=(bool(runtime_cfg.get("loop_video", True)) if getattr(args, "loop", None) is None else args.loop),
             frame_rotation=frame_rotation,
         )
     else:
@@ -89,27 +96,43 @@ def run_application(args: Namespace) -> None:
 
     detector = _create_detector(args, detector_cfg, zones, logger)
     person_masker = _create_person_masker(person_mask_cfg, logger)
-    validator = ZoneValidator(
-        zones=zones,
-        anomaly_threshold=float(validation_cfg.get("anomaly_threshold", 0.55)),
-    )
+    validation_mode = validation_cfg.get("mode", "zones")
+    if validation_mode == "clip_attachment":
+        model = getattr(detector, "model", None)
+        if (getattr(model, "task", None) != "segment"
+                or getattr(model, "names", None) != {0: "connector", 1: "clip", 2: "cable"}):
+            raise ValueError("clip_attachment requires a segmentation model: connector=0, clip=1, cable=2.")
+        if person_masker is not None:
+            raise ValueError("Disable person masking for clip_attachment; inference must use the original pixels.")
+        validator = ClipAttachmentValidator(validation_cfg.get("clip_attachment", {}))
+        zones = []  # The mobile clip is not checked against the old demo table zones.
+    elif validation_mode == "zones":
+        validator = ZoneValidator(zones=zones, anomaly_threshold=float(validation_cfg.get("anomaly_threshold", 0.55)))
+    else:
+        raise ValueError(f"Unknown validation mode: {validation_mode}")
     mqtt_publisher = MqttPublisher(mqtt_config, logger)
     inspection_logger = InspectionLogger(log_dir=log_dir, logger=logger)
 
-    logger.info("Starting inspection in %s mode with detector=%s (headless, no GUI)", mode, detector.name)
-    source.open()
-    mqtt_publisher.connect()
+    logger.info("Starting inspection: mode=%s detector=%s validation=%s display=%s", mode, detector.name, validation_mode, show_window)
+    if getattr(detector, "model_path", None):
+        logger.info("YOLO model: %s | task=%s | classes=%s", detector.model_path, detector.model.task, detector.model.names)
 
     recent_times: deque[float] = deque(maxlen=60)
     ok_count = 0
     nok_count = 0
+    indeterminate_count = 0
     total_frames = 0
     last_status: str | None = None
     last_snapshot_frame = -snapshot_cooldown_frames
     last_error_label: str | None = None
     last_video_stream_frame = -video_stream_cooldown
+    last_source_name: str | None = None
 
+    window_title = "Inspection faisceau - YOLO"
+    window_created = False
     try:
+        source.open()
+        mqtt_publisher.connect()
         while True:
             packet = source.read()
             if packet is None:
@@ -117,6 +140,13 @@ def run_application(args: Namespace) -> None:
                 break
 
             frame = packet.frame
+            source_changed = packet.source_name != last_source_name
+            if source_changed:
+                logger.info("Video source: %s | global frame=%s", packet.source_name, packet.frame_index)
+                last_source_name = packet.source_name
+            if total_frames and packet.frame_index == 0:
+                last_snapshot_frame = -snapshot_cooldown_frames
+                last_video_stream_frame = -video_stream_cooldown
             if person_masker is not None:
                 frame, _ = person_masker.apply(frame, packet.frame_index)
             active_zones = _scale_zones_to_frame(
@@ -127,7 +157,8 @@ def run_application(args: Namespace) -> None:
                 target_height=frame.shape[0],
             )
             detector_result = detector.infer(frame)
-            validation_result = validator.validate(detector_result, zones=active_zones)
+            validation_result = (validator.validate(detector_result) if isinstance(validator, ClipAttachmentValidator)
+                                 else validator.validate(detector_result, zones=active_zones))
 
             annotated_frame = render_inspection_overlay(
                 frame=frame,
@@ -139,6 +170,7 @@ def run_application(args: Namespace) -> None:
                 draw_zones=bool(visualization_cfg.get("draw_zones", True)),
                 draw_boxes=bool(visualization_cfg.get("draw_boxes", True)),
                 show_labels=bool(visualization_cfg.get("show_labels", True)),
+                draw_masks=bool(visualization_cfg.get("draw_masks", True)),
             )
 
             total_frames += 1
@@ -149,9 +181,11 @@ def run_application(args: Namespace) -> None:
                 ok_count += 1
                 if not last_error_label:
                     last_error_label = None
-            else:
+            elif validation_result.status == "NOK":
                 nok_count += 1
                 last_error_label = _derive_error_label(validation_result)
+            else:
+                indeterminate_count += 1
 
             snapshot_path: str | None = None
             snapshot_base64: str | None = None
@@ -182,6 +216,7 @@ def run_application(args: Namespace) -> None:
                 fps=fps,
                 last_error_label=last_error_label,
             )
+            metrics_payload["indeterminate_count"] = indeterminate_count
 
             mqtt_publisher.publish("status", status_payload)
             mqtt_publisher.publish("metrics", metrics_payload)
@@ -192,17 +227,25 @@ def run_application(args: Namespace) -> None:
                 video_stream_cooldown <= 0
                 or (packet.frame_index - last_video_stream_frame) >= video_stream_cooldown
             )
-            if should_stream_video:
+            if should_stream_video and mqtt_publisher.enabled:
                 frame_base64 = encode_frame_to_base64(annotated_frame)
                 if frame_base64:
-                    mqtt_publisher.publish("video_stream", {"image_base64": frame_base64})
+                    mqtt_publisher.publish("video_stream", {
+                        "image_base64": frame_base64,
+                        "frame_index": packet.frame_index,
+                        "source_name": packet.source_name,
+                        "timestamp": status_payload["timestamp"],
+                        "status": validation_result.status,
+                    })
                     last_video_stream_frame = packet.frame_index
-                    logger.info("Published video frame %s, size: %s bytes", packet.frame_index, len(frame_base64))
+                    logger.debug("Published video frame %s, size: %s bytes", packet.frame_index, len(frame_base64))
                 else:
                     logger.warning("Failed to encode frame %s to Base64", packet.frame_index)
 
             event_type: str | None = None
-            if validation_result.status != last_status:
+            if source_changed:
+                event_type = "source_change"
+            elif validation_result.status != last_status:
                 event_type = "status_change"
             elif validation_result.status == "NOK":
                 event_type = "nok"
@@ -234,10 +277,29 @@ def run_application(args: Namespace) -> None:
                 mqtt_publisher.publish("snapshot", snapshot_payload)
 
             last_status = validation_result.status
+            if show_window:
+                if not window_created:
+                    cv2.namedWindow(window_title, cv2.WINDOW_NORMAL)
+                    window_created = True
+                    height, width = annotated_frame.shape[:2]
+                    scale = min(1.0, 760 / height, 1200 / width)
+                    cv2.resizeWindow(window_title, int(width * scale), int(height * scale))
+                cv2.imshow(window_title, annotated_frame)
+                if (cv2.waitKey(1) & 0xFF) in (ord("q"), ord("Q"), 27):
+                    break
+                if cv2.getWindowProperty(window_title, cv2.WND_PROP_VISIBLE) < 1:
+                    break
+            if max_frames and total_frames >= max_frames:
+                break
 
+    except KeyboardInterrupt:
+        logger.info("Inspection interrupted by user.")
     finally:
         source.release()
         mqtt_publisher.close()
+        if window_created:
+            cv2.destroyAllWindows()
+        logger.info("Summary: frames=%s OK=%s NOK=%s INDETERMINE=%s", total_frames, ok_count, nok_count, indeterminate_count)
         logger.info("Application shutdown complete.")
 
 
@@ -308,6 +370,8 @@ def _estimate_fps(recent_times: deque[float]) -> float:
 
 
 def _derive_error_label(result: Any) -> str:
+    if getattr(result, "relation", {}).get("rule") == "clip_attachment" and result.status == "NOK":
+        return "clip_attached_to_connector"
     if result.anomaly_label:
         return result.anomaly_label
     if result.missing_classes:
