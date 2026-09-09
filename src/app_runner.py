@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 from argparse import Namespace
 from collections import deque
@@ -60,7 +61,8 @@ def run_application(args: Namespace) -> None:
     snapshot_cooldown_frames = int(runtime_cfg.get("snapshot_cooldown_frames", 20))
     save_nok_snapshots = bool(runtime_cfg.get("save_nok_snapshots", True))
     
-    log_dir = _resolve_path(runtime_cfg.get("log_dir"))
+    # Keep the Windows inspection journal separate from technical logs in data/logs.
+    log_dir = None if sys.platform == "win32" else _resolve_path(runtime_cfg.get("log_dir"))
     video_stream_cooldown = int(runtime_cfg.get("video_stream_cooldown_frames", 5))
 
     if mode == "offline":

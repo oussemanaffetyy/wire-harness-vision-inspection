@@ -221,6 +221,27 @@ class ClipAttachmentTests(unittest.TestCase):
             self.assertIn("INDETERMINE: clip non visible", content)
             self.assertNotIn("Test NOK", content)
 
+    def test_logger_appends_ok_and_nok_without_erasing_history(self):
+        with tempfile.TemporaryDirectory() as temp:
+            log_file = Path(temp) / "IACom.txt"
+            log_file.write_text("Historique existant\n", encoding="utf-8")
+            logger = InspectionLogger(log_dir=temp)
+            logger.log_from_validation_result(SimpleNamespace(status="OK", details=[]))
+            logger.log_from_validation_result(SimpleNamespace(status="NOK", details=["clip sur connecteur"]))
+            lines = log_file.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(lines), 3)
+            self.assertEqual(lines[0], "Historique existant")
+            self.assertTrue(lines[1].endswith(" - Test OK"))
+            self.assertTrue(lines[2].endswith(" - Test NOK: clip sur connecteur"))
+
+    def test_default_windows_logger_uses_c_test(self):
+        with patch("src.inspection_logger.sys", SimpleNamespace(platform="win32")), \
+                patch("src.inspection_logger.Path") as path:
+            InspectionLogger()
+            path.assert_called_once_with("C:/test")
+            path.return_value.mkdir.assert_called_once_with(parents=True, exist_ok=True)
+            path.return_value.__truediv__.assert_called_once_with("IACom.txt")
+
 
 class YoloMaskTests(unittest.TestCase):
     def infer(self, masks, box_count=1):
@@ -263,7 +284,7 @@ class ApplicationTests(unittest.TestCase):
             video.touch()
             args = run.build_runtime_args("offline", video=str(video), no_display=not display,
                                           no_mqtt=True, max_frames=3)
-            config = {"runtime": {"show_window": True, "save_nok_snapshots": True},
+            config = {"runtime": {"show_window": True, "save_nok_snapshots": True, "log_dir": "data/logs"},
                       "validation": {"mode": "clip_attachment", "clip_attachment": {
                           "connector_near_px": 0}}}
             source = Mock()
@@ -294,6 +315,12 @@ class ApplicationTests(unittest.TestCase):
                     source.release.assert_called_once()
                     publisher.close.assert_called_once()
             return publisher, gui, mocks
+
+    def test_windows_keeps_default_inspection_log_directory(self):
+        with patch.object(app_runner, "sys", SimpleNamespace(platform="win32")):
+            _, _, mocks = self.execute()
+        self.assertIsNone(mocks["InspectionLogger"].call_args.kwargs["log_dir"])
+        self.assertEqual(mocks["InspectionLogger"].return_value.log_from_validation_result.call_count, 3)
 
     def test_default_ok_counted_as_ok_and_only_nok_saved(self):
         publisher, gui, mocks = self.execute()

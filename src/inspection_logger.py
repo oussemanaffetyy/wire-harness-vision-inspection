@@ -35,6 +35,7 @@ class InspectionLogger:
 
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.log_dir / "IACom.txt"
+        self.logger.info("Inspection results file: %s", self.log_file)
 
     def log_result(self, status: str, details: str = "") -> None:
         """Log inspection result to the combined file."""
