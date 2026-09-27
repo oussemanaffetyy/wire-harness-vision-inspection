@@ -169,13 +169,13 @@ ne prouve pas une attache mécanique.
 
 Paramètres principaux dans `config/app.yaml` :
 
-| Paramètre | Valeur de la démonstration |
-| --- | --- |
-| `source.demo_videos` | `data/videos/test1.MOV`, puis `data/videos/test2.MOV` |
-| `detector.yolo_model_path` | `models/best_v02.pt` |
-| `validation.mode` | `clip_attachment` |
-| `validation.clip_attachment.min_confidence` | `0.35` |
-| `validation.clip_attachment.connector_near_px` | `20.0` |
+| Paramètre                                       | Valeur de la démonstration                               |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| `source.demo_videos`                           | `data/videos/test1.MOV`, puis `data/videos/test2.MOV` |
+| `detector.yolo_model_path`                     | `models/best_v02.pt`                                    |
+| `validation.mode`                              | `clip_attachment`                                       |
+| `validation.clip_attachment.min_confidence`    | `0.35`                                                  |
+| `validation.clip_attachment.connector_near_px` | `20.0`                                                  |
 
 ## MQTT et diagnostics
 
@@ -183,13 +183,13 @@ Paramètres principaux dans `config/app.yaml` :
 `wire-harness-python` et Node-RED `wire-harness-dashboard` : des identifiants
 distincts évitent les déconnexions mutuelles.
 
-| Topic | Contenu |
-| --- | --- |
-| `factory/inspection/status` | Statut, timestamp, source, indice global, détails |
-| `factory/inspection/video_stream` | JPEG annoté dans `image_base64`, statut, source, indice global |
-| `factory/inspection/events` | Changement de vidéo/statut et événements NOK |
-| `factory/inspection/metrics` | Compteurs cumulatifs d'images, pas de pièces |
-| `factory/inspection/snapshot` | Capture NOK et chemin local |
+| Topic                               | Contenu                                                          |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `factory/inspection/status`       | Statut, timestamp, source, indice global, détails               |
+| `factory/inspection/video_stream` | JPEG annoté dans`image_base64`, statut, source, indice global |
+| `factory/inspection/events`       | Changement de vidéo/statut et événements NOK                  |
+| `factory/inspection/metrics`      | Compteurs cumulatifs d'images, pas de pièces                    |
+| `factory/inspection/snapshot`     | Capture NOK et chemin local                                      |
 
 Les widgets conservent le format d'origine : `payload.status` et
 `payload.image_base64`. Les autres champs sont des diagnostics additionnels.
@@ -237,10 +237,10 @@ python run.py demo --once --no-display
 
 Derniers essais individuels avec `best_v02.pt` et les seuils fournis :
 
-| Vidéo | Images | OK par défaut | NOK |
-| --- | ---: | ---: | ---: |
-| `test1.MOV`, scénario NOK | 126 | 33 | 93 |
-| `test2.MOV`, scénario OK | 265 | 256 | 9 |
+| Vidéo                       | Images | OK par défaut | NOK |
+| ---------------------------- | -----: | -------------: | --: |
+| `test1.MOV`, scénario NOK |    126 |             33 |  93 |
+| `test2.MOV`, scénario OK  |    265 |            256 |   9 |
 
 Les OK de ces essais correspondent à une absence de détection du clip.
 **Neuf fausses alertes subsistent sur test2** : les boîtes prédites sont trop

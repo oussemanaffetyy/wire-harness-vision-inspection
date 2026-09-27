@@ -3,7 +3,7 @@ app:
   version: 0.1.0
 
 runtime:
-  show_window: true
+  show_window: false
   loop_video: false
   save_nok_snapshots: true
   snapshot_dir: data/snapshots
