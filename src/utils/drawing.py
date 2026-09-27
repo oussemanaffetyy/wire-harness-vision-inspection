@@ -35,16 +35,6 @@ def render_inspection_overlay(
         _draw_zones(annotated, zones, result.failed_zone_ids)
     _draw_detections(annotated, detections, draw_boxes, show_labels)
 
-    # Put the verdict outside the camera image so no clip or mask is hidden.
-    annotated = cv2.copyMakeBorder(annotated, 64, 48, 0, 0, cv2.BORDER_CONSTANT, value=(28, 32, 36))
-    color = {"OK": (40, 170, 65), "NOK": (45, 50, 220)}.get(result.status, (135, 135, 135))
-    cv2.rectangle(annotated, (0, 0), (5, 63), color, -1)
-    qualifier = "STATUT ESTIME" if result.relation else "STATUT"
-    _text(annotated, f"{qualifier} : {result.status}", (14, 27), 0.65, color, 2)
-    _text(annotated, "Connecteur rouge | Clip bleu | Cable vert", (14, 50), 0.40, (215, 215, 215))
-    note = result.details[0] if result.details else "Inspection en cours"
-    _text(annotated, note, (12, annotated.shape[0] - 28), 0.43, (240, 240, 240))
-    _text(annotated, "Q ou Echap : quitter", (12, annotated.shape[0] - 9), 0.36, (175, 175, 175))
     return annotated
 
 
