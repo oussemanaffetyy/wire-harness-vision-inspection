@@ -18,7 +18,8 @@ source:
   default_offline_video: data/videos/test2.MOV
   default_camera_index: 0
   default_stream_url: ""
-  frame_rotation: 90
+  frame_rotation: 0
+  display_rotation: 90
   camera_width: 1280
   camera_height: 720
 

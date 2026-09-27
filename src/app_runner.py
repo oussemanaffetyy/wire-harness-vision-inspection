@@ -175,6 +175,14 @@ def run_application(args: Namespace) -> None:
                 draw_masks=bool(visualization_cfg.get("draw_masks", True)),
             )
 
+            display_rotation = int(source_cfg.get("display_rotation", 0))
+            if display_rotation == 90:
+                annotated_frame = cv2.rotate(annotated_frame, cv2.ROTATE_90_CLOCKWISE)
+            elif display_rotation == 180:
+                annotated_frame = cv2.rotate(annotated_frame, cv2.ROTATE_180)
+            elif display_rotation == 270:
+                annotated_frame = cv2.rotate(annotated_frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
             total_frames += 1
             recent_times.append(time.time())
             fps = _estimate_fps(recent_times)
