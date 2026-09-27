@@ -1,7 +1,7 @@
 <template>
   <main ref="screen" class="whi-screen">
     <header class="whi-header">
-      <div><p class="whi-eyebrow">POSTE 01 · INSPECTION FAISCEAU</p><h1>Contrôle du faisceau<span>.</span></h1></div>
+      <div><p class="whi-eyebrow">POSTE 01 · DASHBOARD LEONI</p><h1>Contrôle du faisceau<span>.</span></h1></div>
     </header>
     <div class="whi-layout">
       <section class="whi-panel whi-camera" aria-label="Vidéo d'inspection">
@@ -18,16 +18,12 @@
           <div class="whi-verdict-top"><h2>Résultat de l'inspection</h2><time>{{ current ? time(current.timestamp) : '—' }}</time></div>
           <div class="whi-verdict-main" aria-live="polite"><strong>{{ displayStatus }}</strong></div>
         </section>
-        <section class="whi-panel whi-counters" aria-label="Compteurs">
-          <div class="whi-counter is-ok"><span>OK</span><strong>{{ number(metrics.ok_count) }}</strong></div>
-          <div class="whi-counter is-nok"><span>NOK</span><strong>{{ number(metrics.nok_count) }}</strong></div>
-        </section>
+
         <section class="whi-panel whi-history" aria-label="Historique des inspections">
           <header class="whi-panel-header"><h2>Historique récent</h2><button v-if="journalName" class="whi-link" @click="closeJournal">Session</button></header>
           <div class="whi-history-tools">
             <div v-if="filtered.length" class="whi-filters" aria-label="Filtrer l'historique"><button :aria-pressed="filter === 'all'" @click="setFilter('all')">Tout</button><button :aria-pressed="filter === 'NOK'" @click="setFilter('NOK')">Défauts</button></div>
-            <div class="whi-file-actions whi-secondary-actions"><button @click="$refs.journal.click()" :disabled="loading" title="Consulter le journal sans le modifier">{{ loading ? 'Lecture…' : 'Ouvrir un TXT' }}</button><button @click="download" :disabled="!filtered.length" title="Télécharger l’historique">Exporter TXT</button></div>
-            <input ref="journal" class="whi-file-input" type="file" accept=".txt,text/plain" aria-label="Choisir IACom.txt" @change="importJournal" />
+            <div class="whi-file-actions whi-secondary-actions"><button @click="download" :disabled="!filtered.length" title="Télécharger l’historique">Exporter TXT</button></div>
           </div>
           <p v-if="notice" class="whi-notice" role="status">{{ notice }}</p>
           <ol v-if="visibleRows.length" class="whi-rows">
