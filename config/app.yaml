@@ -13,12 +13,12 @@ runtime:
 
 source:
   demo_videos:
-    - data/videos/test1.MOV
     - data/videos/test2.MOV
-  default_offline_video: data/videos/test1.MOV
+    - data/videos/test1.MOV
+  default_offline_video: data/videos/test2.MOV
   default_camera_index: 0
   default_stream_url: ""
-  frame_rotation: 0
+  frame_rotation: 90
   camera_width: 1280
   camera_height: 720
 
